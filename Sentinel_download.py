@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 
 import os
@@ -175,14 +174,14 @@ except IOError:
 
 
 # ==================================================
-#      prepare wget command line to search catalog
+# prepare wget command line to search catalog
 # ==================================================
 if os.path.exists('query_results.xml'):
     os.remove('query_results.xml')
 
 
 if options.downloader == "aria2":
-    wg = 'aria2c --check-certificate=false'
+    wg = 'aria2c --check-certificate=false '
     auth = '--http-user="%s" --http-passwd="%s"' % (account, passwd)
     search_output = " --continue -o query_results.xml"
     wg_opt = " -o "
@@ -206,16 +205,16 @@ if options.sentinel == "S2":
     elif options.level == "L2A":
         producttype = "S2MSI2Ap"
 if geom == 'point':
-    if sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
+    # if sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
         query_geom = 'footprint:\\"Intersects(%f,%f)\\"' % (options.lat, options.lon)
-    else:
-        query_geom = 'footprint:"Intersects(%f,%f)"' % (options.lat, options.lon)
+    # else:
+    #     query_geom = 'footprint:"Intersects(%f,%f)"' % (options.lat, options.lon)
 
 elif geom == 'rectangle':
-    if sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
+    # if sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
         query_geom = 'footprint:\\"Intersects(POLYGON(({lonmin} {latmin}, {lonmax} {latmin}, {lonmax} {latmax}, {lonmin} {latmax},{lonmin} {latmin})))\\"'.format(latmin=options.latmin, latmax=options.latmax, lonmin=options.lonmin, lonmax=options.lonmax)
-    else:
-        query_geom = 'footprint:"Intersects(POLYGON(({lonmin} {latmin}, {lonmax} {latmin}, {lonmax} {latmax}, {lonmin} {latmax},{lonmin} {latmin})))"'.format(latmin=options.latmin, latmax=options.latmax, lonmin=options.lonmin, lonmax=options.lonmax)
+    # else:
+    #     query_geom = 'footprint:"Intersects(POLYGON(({lonmin} {latmin}, {lonmax} {latmin}, {lonmax} {latmax}, {lonmin} {latmax},{lonmin} {latmin})))"'.format(latmin=options.latmin, latmax=options.latmax, lonmin=options.lonmin, lonmax=options.lonmax)
 
 
 if options.orbit is None:
@@ -256,17 +255,22 @@ if options.end_date != None:
 else:
     end_date = date.today().strftime(format='%Y%m%d')
 
+if options.downloader == "aria2":
+    wg_search = '%s --allow-overwrite ' % wg
+else:
+    wg_search = wg
+
 if options.MaxRecords > 100:
     requests_needed = math.ceil(options.MaxRecords / 100.0)
     request_list = []
     current_records = 0
     for i in range(int(requests_needed)):
         if (i + 1) * 100 > options.MaxRecords:
-            request_list.append('%s %s %s "%s%s&rows=%d&start=%d"' % (wg, auth, search_output, url_search, query, options.MaxRecords % 100, i * 100))
+            request_list.append('%s %s %s "%s%s&rows=%d&start=%d"' % (wg_search, auth, search_output, url_search, query, options.MaxRecords % 100, i * 100))
         else:
-            request_list.append('%s %s %s "%s%s&rows=%d&start=%d"' % (wg, auth, search_output, url_search, query, 100, i * 100))
+            request_list.append('%s %s %s "%s%s&rows=%d&start=%d"' % (wg_search, auth, search_output, url_search, query, 100, i * 100))
 else:
-    commande_wget = '%s %s %s "%s%s&rows=%d"' % (wg, auth, search_output, url_search, query, options.MaxRecords)
+    commande_wget = '%s %s %s "%s%s&rows=%d"' % (wg_search, auth, search_output, url_search, query, options.MaxRecords)
     print(commande_wget)
     request_list = [commande_wget]
 
